@@ -24,15 +24,48 @@ const priorities = [
 ]
 const flagColors = ['Red', 'Green', 'Yellow', 'Blue'];
 
-export default function CreateTask({ name, priority, flagColor }) {
+export default function CreateTask() {
     const [name, setName] = useState('');
     const [priority, setPriority] = useState('');
     const [flagColor, setFlagColor] = useState('');
+    const [counter, setCounter] = useState(100);
+    const [disabled, setDisabled] = useState(false);
+    const [tasks, setTasks] = useState([]);
 
     const handleSubmit = () => {
         const task = createClass(name, priority, flagColor.length ? flagColor : null);
-        localStorage.setItem('task', JSON.stringify(task));
-    }
+        localStorage.setItem(`task${counter}`, task);
+        setCounter(100 - tasks.length);
+        if(counter === -1) {
+            setDisabled(true)
+        }
+    };
+
+    useEffect(() => {
+        (function getTasks(){
+            let start = 0
+            let item = localStorage.getItem(`task${start}`);
+
+            while(!item) {
+                start++;
+                if(start === 100) {
+                    break;
+                }
+            }
+
+            const num = start - 100;
+
+            while (num >= 0) {
+                let item = localStorage.getItem(`task${num}`);
+                if(!tasks.length) {
+                    setTasks([item])
+                } else {
+                    setTasks([...tasks, item]);
+                }
+            }
+        })()
+    }, [])
+
   return (
     <div className="flex justify-around items-center">
         <Input onChange={(e) => setName(e.target.value)} type="text" label="Task name" />
@@ -48,7 +81,7 @@ export default function CreateTask({ name, priority, flagColor }) {
                 })}
             </Autocomplete>
         </AutocompleteSection>
-        <Button onClick={() => handleSubmit()}>Create</Button>
+        <Button disabled={disabled} onClick={() => handleSubmit()}>Create</Button>
     </div>
   )
 }
